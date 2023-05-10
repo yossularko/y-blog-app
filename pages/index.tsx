@@ -17,7 +17,7 @@ import Image from "next/image";
 import { FiLogOut } from "react-icons/fi";
 import { Article, Pagination } from "@/types";
 import {
-  getArticle,
+  getMyArticle,
   getProfile,
   login,
   refreshToken,
@@ -94,9 +94,9 @@ export default function Home() {
     }
   }, [handleRefreshToken, user.id, toast]);
 
-  const handleGetArticle = useCallback(async () => {
+  const handleGetMyArticle = useCallback(async () => {
     try {
-      const response = await getArticle();
+      const response = await getMyArticle();
 
       setArticles(response.data);
     } catch (error) {
@@ -119,13 +119,13 @@ export default function Home() {
         if (response.status === 201) {
           setToken(response.data.token);
           setUser(response.data.user);
-          await handleGetArticle();
+          await handleGetMyArticle();
         }
       } catch (error) {
         errorRes(error as AxiosError<ErrorResponse>, toast, setLoading);
       }
     },
-    [input, toast, handleGetArticle]
+    [input, toast, handleGetMyArticle]
   );
 
   const handleLogout = useCallback(async () => {
@@ -212,9 +212,9 @@ export default function Home() {
         )}
       </Flex>
       <Box flex={1} p={6}>
-        <Text fontSize="3xl">All Articles</Text>
+        <Text fontSize="3xl">My Articles</Text>
         <HStack>
-          <Button onClick={handleGetArticle}>Refresh</Button>
+          <Button onClick={handleGetMyArticle}>Refresh</Button>
           <Button>Add Article</Button>
         </HStack>
         {!token.refresh_token ? null : (

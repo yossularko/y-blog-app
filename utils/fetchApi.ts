@@ -30,7 +30,19 @@ export const updateProfile = async (id: string, data: any) => {
 };
 
 export const getArticle = async () => {
+  return await fetchApi.get("/articles");
+};
+
+export const getMyArticle = async () => {
   return await fetchApi.get("/articles/my-article", { withCredentials: true });
+};
+
+export const getArticleDetails = async (slug: string) => {
+  return await fetchApi.get(`/articles/${slug}`);
+};
+
+export const getCategory = async () => {
+  return await fetchApi.get("/categories", { withCredentials: true });
 };
 
 export default fetchApi;
