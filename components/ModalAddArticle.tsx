@@ -93,6 +93,8 @@ const ModalAddArticle = ({
           title: "Success Post",
           description: `Success post article ${input.title}`,
         });
+        setInput(initialInputs);
+        setFile(null);
         await onSuccess();
         setLoading(false);
         onClose();
