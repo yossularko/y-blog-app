@@ -7,6 +7,10 @@ export const login = async (data: any) => {
   return await fetchApi.post("/auth/signin", data, { withCredentials: true });
 };
 
+export const register = async (data: any) => {
+  return await fetchApi.post("/auth/signup", data);
+};
+
 export const refreshToken = async (data: any) => {
   return await fetchApi.post("/auth/refresh-token", data, {
     withCredentials: true,
