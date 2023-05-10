@@ -16,7 +16,13 @@ import { AxiosError } from "axios";
 import Image from "next/image";
 import { FiLogOut } from "react-icons/fi";
 import { Article, Pagination } from "@/types";
-import { fetchApi } from "@/utils/fetchApi";
+import {
+  getArticle,
+  getProfile,
+  login,
+  refreshToken,
+  revokeToken,
+} from "@/utils/fetchApi";
 import errorRes from "@/utils/errorRes";
 import { ErrorResponse } from "@/types/error";
 import { appUrl, initialToken, initialUser } from "@/utils/constant";
@@ -53,9 +59,7 @@ export default function Home() {
       const dataRefresh = {
         refresh_token: token.refresh_token,
       };
-      const response = await fetchApi.post("/auth/refresh-token", dataRefresh, {
-        withCredentials: true,
-      });
+      const response = await refreshToken(dataRefresh);
 
       if (response.status === 201) {
         toast({
@@ -69,11 +73,30 @@ export default function Home() {
     }
   }, [toast, token.refresh_token]);
 
+  const handleGetProfile = useCallback(async () => {
+    if (!user.id) {
+      toast({
+        status: "error",
+        title: "Not Found",
+        description: "Cannot find user",
+      });
+      return;
+    }
+
+    try {
+      const response = await getProfile(user.id);
+      setUser(response.data);
+    } catch (error) {
+      errorRes(error as AxiosError<ErrorResponse>, toast, undefined, {
+        isCustom401: true,
+        handle401: handleRefreshToken,
+      });
+    }
+  }, [handleRefreshToken, user.id, toast]);
+
   const handleGetArticle = useCallback(async () => {
     try {
-      const response = await fetchApi.get("/articles/my-article", {
-        withCredentials: true,
-      });
+      const response = await getArticle();
 
       setArticles(response.data);
     } catch (error) {
@@ -89,9 +112,7 @@ export default function Home() {
       e.preventDefault();
       setLoading(true);
       try {
-        const response = await fetchApi.post("/auth/signin", input, {
-          withCredentials: true,
-        });
+        const response = await login(input);
 
         console.log("success login: ", response.data);
         setLoading(false);
@@ -109,12 +130,10 @@ export default function Home() {
 
   const handleLogout = useCallback(async () => {
     try {
-      const dataRefresh = {
+      const dataRevoke = {
         refresh_token: token.refresh_token,
       };
-      const response = await fetchApi.patch("/auth/revoke", dataRefresh, {
-        withCredentials: true,
-      });
+      const response = await revokeToken(dataRevoke);
 
       if (response.status === 200) {
         toast({
@@ -161,34 +180,43 @@ export default function Home() {
             </form>
           </Box>
         ) : (
-          <HStack justifyContent="space-between">
-            <HStack>
-              <ChakraImage
-                src={`${appUrl}${user.profile.avaImage}`}
-                alt="avatar"
-                boxSize="50px"
-                objectFit="cover"
-                borderRadius="full"
-                fallbackSrc="https://via.placeholder.com/50"
-                onClick={onOpen}
-                cursor="pointer"
+          <Box>
+            <HStack justifyContent="space-between">
+              <HStack>
+                <ChakraImage
+                  src={`${appUrl}${user.profile.avaImage}`}
+                  alt="avatar"
+                  boxSize="50px"
+                  objectFit="cover"
+                  borderRadius="full"
+                  fallbackSrc="https://via.placeholder.com/50"
+                  onClick={onOpen}
+                  cursor="pointer"
+                />
+                <Box>
+                  <Text fontSize="sm">Welcome</Text>
+                  <Text fontSize="lg">{user.profile.name}</Text>
+                </Box>
+              </HStack>
+              <IconButton
+                aria-label="logout"
+                icon={<FiLogOut />}
+                size="sm"
+                onClick={handleLogout}
               />
-              <Box>
-                <Text fontSize="sm">Welcome</Text>
-                <Text fontSize="lg">{user.profile.name}</Text>
-              </Box>
             </HStack>
-            <IconButton
-              aria-label="logout"
-              icon={<FiLogOut />}
-              size="sm"
-              onClick={handleLogout}
-            />
-          </HStack>
+            <Box mt={4}>
+              <Button onClick={handleGetProfile}>Refresh Profile</Button>
+            </Box>
+          </Box>
         )}
       </Flex>
       <Box flex={1} p={6}>
         <Text fontSize="3xl">All Articles</Text>
+        <HStack>
+          <Button onClick={handleGetArticle}>Refresh</Button>
+          <Button>Add Article</Button>
+        </HStack>
         {!token.refresh_token ? null : (
           <Box mt={4}>
             {articles.data.map((item) => {
