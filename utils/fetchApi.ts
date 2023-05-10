@@ -45,4 +45,10 @@ export const getCategory = async () => {
   return await fetchApi.get("/categories", { withCredentials: true });
 };
 
+export const postArticle = async (data: any) => {
+  return fetchApi.post("/articles", data, {
+    withCredentials: true,
+  });
+};
+
 export default fetchApi;

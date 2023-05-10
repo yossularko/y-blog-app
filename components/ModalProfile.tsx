@@ -22,6 +22,7 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   data: User;
+  onSuccess: () => Promise<void>;
 }
 
 interface FileUpload {
@@ -29,7 +30,7 @@ interface FileUpload {
   bgImage: File | null;
 }
 
-const ModalProfile = ({ visible, onClose, data }: Props) => {
+const ModalProfile = ({ visible, onClose, data, onSuccess }: Props) => {
   const [files, setFiles] = useState<FileUpload>({
     avaImage: null,
     bgImage: null,
@@ -76,6 +77,7 @@ const ModalProfile = ({ visible, onClose, data }: Props) => {
           title: "Update Profile",
           description: "Success Update Profile",
         });
+        await onSuccess();
         onClose();
       }
       setLoading(false);
@@ -83,7 +85,7 @@ const ModalProfile = ({ visible, onClose, data }: Props) => {
     } catch (error) {
       errorRes(error as AxiosError<ErrorResponse>, toast, setLoading);
     }
-  }, [files, toast, data.id, onClose]);
+  }, [files, toast, data.id, onSuccess, onClose]);
 
   return (
     <Modal isOpen={visible} onClose={onClose} size="2xl">
