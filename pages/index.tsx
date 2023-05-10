@@ -28,6 +28,7 @@ import ModalProfile from "@/components/ModalProfile";
 import ModalAddArticle from "@/components/ModalAddArticle";
 import ListArticle from "@/components/ListArticle";
 import Login from "@/components/Login";
+import ModalComment from "@/components/ModalComment";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -48,6 +49,11 @@ export default function Home() {
   const toast = useToast();
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { isOpen: isAdd, onClose: closeAdd, onOpen: openAdd } = useDisclosure();
+  const {
+    isOpen: isComment,
+    onClose: closeComment,
+    onOpen: openComment,
+  } = useDisclosure();
 
   const handleRefreshToken = useCallback(async () => {
     try {
@@ -151,6 +157,7 @@ export default function Home() {
         onSuccess={handleGetMyArticle}
         handleRefreshToken={handleRefreshToken}
       />
+      <ModalComment visible={isComment} onClose={closeComment} />
       <Flex direction="column" minH="100vh" w="380px" bg="gray.900" p={6}>
         {!token.refresh_token ? (
           <Login
@@ -193,7 +200,10 @@ export default function Home() {
         ) : (
           <>
             <Text fontSize="3xl">My Articles</Text>
-            <Button onClick={openAdd}>Add Article</Button>
+            <HStack>
+              <Button onClick={openAdd}>Add Article</Button>
+              <Button onClick={openComment}>Test Comment</Button>
+            </HStack>
           </>
         )}
         <ListArticle data={articles.data} />

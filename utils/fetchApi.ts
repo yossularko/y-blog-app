@@ -55,4 +55,10 @@ export const postArticle = async (data: any) => {
   });
 };
 
+export const commentArticle = async (data: any) => {
+  return fetchApi.post("/comments", data, {
+    withCredentials: true,
+  });
+};
+
 export default fetchApi;
