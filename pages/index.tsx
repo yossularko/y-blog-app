@@ -2,60 +2,29 @@ import { Inter } from "next/font/google";
 import {
   Box,
   Button,
-  CreateToastFnReturn,
   Flex,
+  HStack,
   Input,
   Text,
   useToast,
+  Image as ChakraImage,
+  IconButton,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { useCallback, useState } from "react";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import Image from "next/image";
-
-type Pagination<T = unknown> = T & {
-  page: number;
-  perpage: number;
-  total: number;
-  totalPage: number;
-};
-
-interface Article {
-  id: string;
-  slug: string;
-  title: string;
-  body: string;
-  coverImage: string;
-  tags: string;
-  categoryId: string;
-  authorId: string;
-  createdAt: string;
-  updatedAt: string;
-  Category: {
-    id: string;
-    name: string;
-    image: string;
-  };
-}
-
-interface ErrorResponse {
-  statusCode: number;
-  message: string[];
-  error: string;
-}
-
-interface CustomHandle401 {
-  isCustom401: boolean;
-  handle401: () => void;
-}
+import { FiLogOut } from "react-icons/fi";
+import { Article, Pagination } from "@/types";
+import { fetchApi } from "@/utils/fetchApi";
+import errorRes from "@/utils/errorRes";
+import { ErrorResponse } from "@/types/error";
+import { appUrl, initialToken, initialUser } from "@/utils/constant";
+import ModalProfile from "@/components/ModalProfile";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const imageUrl = "http://192.168.0.102:4000";
-
-const fetchApi = axios.create({ baseURL: "http://192.168.0.102:4000/api" });
-const initialToken = { access_token: "", refresh_token: "" };
 const initialInput = { email: "", password: "" };
-
 const initialData: Pagination<{ data: Article[] }> = {
   page: 0,
   perpage: 0,
@@ -64,56 +33,16 @@ const initialData: Pagination<{ data: Article[] }> = {
   data: [],
 };
 
-const errorRes = (
-  err: AxiosError<ErrorResponse>,
-  toast: CreateToastFnReturn,
-  setLoading?: React.Dispatch<React.SetStateAction<boolean>>,
-  customHandle401?: CustomHandle401
-) => {
-  const { isCustom401, handle401 } = customHandle401 || {};
-
-  if (err.response?.data) {
-    const { statusCode, message } = err.response.data;
-
-    if (isCustom401 && statusCode === 401 && handle401) {
-      handle401();
-      if (setLoading) {
-        setLoading(false);
-      }
-      return;
-    }
-
-    toast({
-      status: "error",
-      title: statusCode,
-      description: JSON.stringify(message),
-    });
-    if (setLoading) {
-      setLoading(false);
-    }
-    return;
-  }
-
-  toast({
-    status: "error",
-    title: err.code,
-    description: err.message,
-  });
-  console.log("error: ", err);
-  if (setLoading) {
-    setLoading(false);
-  }
-};
-
 export default function Home() {
   const [token, setToken] = useState(initialToken);
+  const [user, setUser] = useState(initialUser);
   const [input, setInput] = useState(initialInput);
   const [loading, setLoading] = useState(false);
 
   const [articles, setArticles] = useState(initialData);
-  const [loadingArticle, setLoadingArticle] = useState(false);
 
   const toast = useToast();
+  const { isOpen, onClose, onOpen } = useDisclosure();
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setInput((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -141,39 +70,42 @@ export default function Home() {
   }, [toast, token.refresh_token]);
 
   const handleGetArticle = useCallback(async () => {
-    setLoadingArticle(true);
     try {
       const response = await fetchApi.get("/articles/my-article", {
         withCredentials: true,
       });
 
       setArticles(response.data);
-      setLoadingArticle(false);
     } catch (error) {
-      errorRes(error as AxiosError<ErrorResponse>, toast, setLoadingArticle, {
+      errorRes(error as AxiosError<ErrorResponse>, toast, undefined, {
         isCustom401: true,
         handle401: handleRefreshToken,
       });
     }
   }, [toast, handleRefreshToken]);
 
-  const handleLogin = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetchApi.post("/auth/signin", input, {
-        withCredentials: true,
-      });
+  const handleLogin = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setLoading(true);
+      try {
+        const response = await fetchApi.post("/auth/signin", input, {
+          withCredentials: true,
+        });
 
-      console.log("success login: ", response.data);
-      setToken(response.data);
-      setLoading(false);
-      if (response.status === 201) {
-        await handleGetArticle();
+        console.log("success login: ", response.data);
+        setLoading(false);
+        if (response.status === 201) {
+          setToken(response.data.token);
+          setUser(response.data.user);
+          await handleGetArticle();
+        }
+      } catch (error) {
+        errorRes(error as AxiosError<ErrorResponse>, toast, setLoading);
       }
-    } catch (error) {
-      errorRes(error as AxiosError<ErrorResponse>, toast, setLoading);
-    }
-  }, [input, toast, handleGetArticle]);
+    },
+    [input, toast, handleGetArticle]
+  );
 
   const handleLogout = useCallback(async () => {
     try {
@@ -201,41 +133,62 @@ export default function Home() {
 
   return (
     <Flex className={inter.className}>
-      <Flex
-        direction="column"
-        minH="100vh"
-        w="420px"
-        bg="gray.900"
-        alignItems="center"
-        justifyContent="center"
-        p={6}
-      >
+      <ModalProfile visible={isOpen} onClose={onClose} data={user} />
+      <Flex direction="column" minH="100vh" w="380px" bg="gray.900" p={6}>
         {!token.refresh_token ? (
-          <>
-            <Input
-              type="email"
-              name="email"
-              placeholder="input email"
-              onChange={handleChange}
-              mb={2}
-            />
-            <Input
-              type="password"
-              name="password"
-              placeholder="input password"
-              onChange={handleChange}
-              mb={2}
-            />
-            <Button isLoading={loading} onClick={handleLogin}>
-              Login
-            </Button>
-          </>
+          <Box>
+            <Text fontSize="2xl" mb={4}>
+              Sign In to continue
+            </Text>
+            <form onSubmit={handleLogin}>
+              <Input
+                type="email"
+                name="email"
+                placeholder="input email"
+                onChange={handleChange}
+                mb={2}
+              />
+              <Input
+                type="password"
+                name="password"
+                placeholder="input password"
+                onChange={handleChange}
+                mb={2}
+              />
+              <Button isLoading={loading} type="submit">
+                Login
+              </Button>
+            </form>
+          </Box>
         ) : (
-          <Button onClick={handleLogout}>Logout</Button>
+          <HStack justifyContent="space-between">
+            <HStack>
+              <ChakraImage
+                src={`${appUrl}${user.profile.avaImage}`}
+                alt="avatar"
+                boxSize="50px"
+                objectFit="cover"
+                borderRadius="full"
+                fallbackSrc="https://via.placeholder.com/50"
+                onClick={onOpen}
+                cursor="pointer"
+              />
+              <Box>
+                <Text fontSize="sm">Welcome</Text>
+                <Text fontSize="lg">{user.profile.name}</Text>
+              </Box>
+            </HStack>
+            <IconButton
+              aria-label="logout"
+              icon={<FiLogOut />}
+              size="sm"
+              onClick={handleLogout}
+            />
+          </HStack>
         )}
       </Flex>
       <Box flex={1} p={6}>
-        <Text fontSize="3xl">Get All Articles</Text>
+        <Text fontSize="3xl">All Articles</Text>
         {!token.refresh_token ? null : (
           <Box mt={4}>
             {articles.data.map((item) => {
@@ -256,7 +209,7 @@ export default function Home() {
                     overflow="hidden"
                   >
                     <Image
-                      src={`${imageUrl}${item.coverImage}`}
+                      src={`${appUrl}${item.coverImage}`}
                       alt="cover article"
                       fill
                       sizes="80vw"
