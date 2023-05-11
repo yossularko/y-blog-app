@@ -15,7 +15,7 @@ import React, { useCallback, useState } from "react";
 import Register from "./Register";
 
 interface Props {
-  onSuccess: (res: LoginRes) => Promise<void>;
+  onSuccess: (res: LoginRes) => void;
 }
 
 const initialInput = { email: "", password: "" };
@@ -57,7 +57,7 @@ const Login = ({ onSuccess }: Props) => {
       <Register visible={isOpen} onClose={onClose} />
       <Box>
         <Text fontSize="2xl" mb={4}>
-          See My Articles
+          You&apos;re not Login
         </Text>
         <form onSubmit={handleLogin}>
           <Input

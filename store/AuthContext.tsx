@@ -1,4 +1,9 @@
-import { LoginRes } from "@/types";
+import { LoginRes, User } from "@/types";
+import { ErrorResponse } from "@/types/error";
+import errorRes from "@/utils/errorRes";
+import { refreshToken } from "@/utils/fetchApi";
+import { useToast } from "@chakra-ui/react";
+import { AxiosError } from "axios";
 import React, {
   createContext,
   useCallback,
@@ -10,6 +15,7 @@ enum ActionKind {
   RETRIEVE_DATA = "RETRIEVE_DATA",
   LOGIN = "LOGIN",
   LOGOUT = "LOGOUT",
+  UPDATE_PROFILE = "UPDATE_PROFILE",
 }
 
 enum StorageKind {
@@ -31,6 +37,11 @@ type ACTIONTYPE =
       type: ActionKind.LOGOUT;
       isLoading?: boolean;
       userData?: LoginRes;
+    }
+  | {
+      type: ActionKind.UPDATE_PROFILE;
+      isLoading?: boolean;
+      userData: LoginRes;
     };
 
 interface State {
@@ -38,6 +49,8 @@ interface State {
   userData: LoginRes;
   signIn: (res: LoginRes) => void;
   signOut: () => void;
+  setUpdateProfile: (data: User) => void;
+  handleRefreshToken: () => Promise<void>;
 }
 
 interface Props {
@@ -71,6 +84,8 @@ const initialState: State = {
   userData: initialUserData,
   signIn: () => {},
   signOut: () => {},
+  setUpdateProfile: () => {},
+  handleRefreshToken: async () => {},
 };
 
 export const AuthContext = createContext<State>(initialState);
@@ -95,6 +110,12 @@ const loginReducer = (prevState: State, action: ACTIONTYPE) => {
         userData: initialUserData,
         isLoading: false,
       };
+    case ActionKind.UPDATE_PROFILE:
+      return {
+        ...prevState,
+        userData: action.userData,
+        isLoading: false,
+      };
     default:
       return {
         ...prevState,
@@ -105,6 +126,8 @@ const loginReducer = (prevState: State, action: ACTIONTYPE) => {
 
 const AuthProvider = ({ children }: Props): JSX.Element => {
   const [state, dispatch] = useReducer(loginReducer, initialState);
+
+  const toast = useToast();
 
   useEffect(() => {
     const getInitialData = () => {
@@ -149,12 +172,46 @@ const AuthProvider = ({ children }: Props): JSX.Element => {
     });
   }, []);
 
+  const setUpdateProfile = useCallback(
+    (data: User) => {
+      const updateData: LoginRes = { ...state.userData, user: data };
+      localStorage.setItem(StorageKind.userData, JSON.stringify(updateData));
+
+      return dispatch({
+        type: ActionKind.UPDATE_PROFILE,
+        userData: updateData,
+      });
+    },
+    [state.userData]
+  );
+
+  const handleRefreshToken = useCallback(async () => {
+    try {
+      const dataRefresh = {
+        refresh_token: state.userData.token.refresh_token,
+      };
+      const response = await refreshToken(dataRefresh);
+
+      if (response.status === 201) {
+        toast({
+          status: "info",
+          title: "Refresh",
+          description: "Please try again",
+        });
+      }
+    } catch (error) {
+      errorRes(error as AxiosError<ErrorResponse>, toast);
+    }
+  }, [toast, state.userData]);
+
   return (
     <AuthContext.Provider
       value={{
         ...state,
         signIn,
         signOut,
+        setUpdateProfile,
+        handleRefreshToken,
       }}
     >
       {children}

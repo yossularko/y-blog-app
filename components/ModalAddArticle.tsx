@@ -1,9 +1,9 @@
+import { AuthContext } from "@/store/AuthContext";
 import { Category } from "@/types";
 import { ErrorResponse } from "@/types/error";
 import errorRes from "@/utils/errorRes";
 import { getCategory, postArticle } from "@/utils/fetchApi";
 import {
-  Box,
   Button,
   Input,
   Modal,
@@ -18,13 +18,12 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { AxiosError } from "axios";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onSuccess: () => Promise<void>;
-  handleRefreshToken: () => Promise<void>;
+  onSuccess: () => void;
 }
 
 const initialInputs = {
@@ -34,12 +33,8 @@ const initialInputs = {
   tags: "",
 };
 
-const ModalAddArticle = ({
-  visible,
-  onClose,
-  onSuccess,
-  handleRefreshToken,
-}: Props) => {
+const ModalAddArticle = ({ visible, onClose, onSuccess }: Props) => {
+  const { handleRefreshToken } = useContext(AuthContext);
   const [category, setCategory] = useState<Category[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [input, setInput] = useState(initialInputs);

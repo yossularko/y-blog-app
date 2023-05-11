@@ -1,4 +1,4 @@
-import { User } from "@/types";
+import { AuthContext } from "@/store/AuthContext";
 import { ErrorResponse } from "@/types/error";
 import { appUrl } from "@/utils/constant";
 import errorRes from "@/utils/errorRes";
@@ -19,12 +19,11 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { AxiosError } from "axios";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useContext, useState } from "react";
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  data: User;
   onSuccess: () => Promise<void>;
 }
 
@@ -37,8 +36,11 @@ const baseAvaImage = "https://via.placeholder.com/150";
 const baseBgImage =
   "https://cdn.pixabay.com/photo/2023/04/30/15/17/saint-tropez-7960722_960_720.jpg";
 
-const ModalProfile = ({ visible, onClose, data, onSuccess }: Props) => {
-  const { name, userEmail, bio, avaImage, bgImage } = data.profile;
+const ModalProfile = ({ visible, onClose, onSuccess }: Props) => {
+  const {
+    userData: { user },
+  } = useContext(AuthContext);
+  const { name, userEmail, bio, avaImage, bgImage } = user.profile;
   const [files, setFiles] = useState<FileUpload>({
     avaImage: null,
     bgImage: null,
@@ -79,7 +81,7 @@ const ModalProfile = ({ visible, onClose, data, onSuccess }: Props) => {
         dataPost.append("bgImage", files.bgImage);
       }
 
-      const response = await updateProfile(data.id, dataPost);
+      const response = await updateProfile(user.id, dataPost);
       if (response.status === 200) {
         toast({
           status: "success",
@@ -94,7 +96,7 @@ const ModalProfile = ({ visible, onClose, data, onSuccess }: Props) => {
     } catch (error) {
       errorRes(error as AxiosError<ErrorResponse>, toast, setLoading);
     }
-  }, [files, toast, data.id, onSuccess, onClose]);
+  }, [files, toast, user.id, onSuccess, onClose]);
 
   return (
     <Modal isOpen={visible} onClose={onClose} size="2xl">
