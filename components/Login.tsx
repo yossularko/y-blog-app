@@ -1,4 +1,4 @@
-import { Tokens, User } from "@/types";
+import { LoginRes } from "@/types";
 import { ErrorResponse } from "@/types/error";
 import errorRes from "@/utils/errorRes";
 import { login } from "@/utils/fetchApi";
@@ -13,11 +13,6 @@ import {
 import { AxiosError } from "axios";
 import React, { useCallback, useState } from "react";
 import Register from "./Register";
-
-interface LoginRes {
-  token: Tokens;
-  user: User;
-}
 
 interface Props {
   onSuccess: (res: LoginRes) => Promise<void>;

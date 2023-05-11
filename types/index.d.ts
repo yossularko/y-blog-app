@@ -18,6 +18,11 @@ export interface User {
   };
 }
 
+export interface LoginRes {
+  token: Tokens;
+  user: User;
+}
+
 export type Pagination<T = unknown> = T & {
   page: number;
   perpage: number;
