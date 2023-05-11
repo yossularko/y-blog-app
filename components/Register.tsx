@@ -1,6 +1,6 @@
 import { ErrorResponse } from "@/types/error";
-import errorRes from "@/utils/errorRes";
 import { register } from "@/utils/fetchApi";
+import { myErrorBasic } from "@/utils/myError";
 import {
   Button,
   Input,
@@ -52,7 +52,8 @@ const Register = ({ visible, onClose }: Props) => {
         setInput(initialInputs);
         onClose();
       } catch (error) {
-        errorRes(error as AxiosError<ErrorResponse>, toast, setLoading);
+        myErrorBasic(error as AxiosError<ErrorResponse>, toast);
+        setLoading(false);
       }
     },
     [input, toast, onClose]

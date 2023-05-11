@@ -3,22 +3,20 @@ import ModalAddArticle from "@/components/ModalAddArticle";
 import ModalComment from "@/components/ModalComment";
 import withAuth from "@/HOC/withAuth";
 import { Article, Pagination } from "@/types";
+import { ErrorResponse } from "@/types/error";
 import { getMyArticle } from "@/utils/fetchApi";
+import { myErrorSSR } from "@/utils/myError";
 import { Box, Button, HStack, Text, useDisclosure } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
+import { AxiosError } from "axios";
+import { GetServerSideProps, NextPage } from "next";
+import React, { useCallback, useState } from "react";
 
-const initialData: Pagination<{ data: Article[] }> = {
-  page: 0,
-  perpage: 0,
-  total: 0,
-  totalPage: 0,
-  data: [],
-};
+interface Props {
+  myArticles: Pagination<{ data: Article[] }>;
+}
 
-const MyArticle = () => {
-  const [isUpdate, setIsUpdate] = useState(1);
-
-  const [articles, setArticles] = useState(initialData);
+const MyArticle: NextPage<Props> = ({ myArticles }) => {
+  const [articles, setArticles] = useState(myArticles);
 
   const { isOpen: isAdd, onClose: closeAdd, onOpen: openAdd } = useDisclosure();
   const {
@@ -27,28 +25,21 @@ const MyArticle = () => {
     onOpen: openComment,
   } = useDisclosure();
 
-  useEffect(() => {
-    const getAllArticle = async () => {
-      try {
-        const response = await getMyArticle();
-        setArticles(response.data);
-      } catch (error) {
-        console.log("error get all article: ", error);
-      }
-    };
-
-    if (isUpdate) {
-      getAllArticle();
+  const handelGetMyArticle = useCallback(async () => {
+    try {
+      const response = await getMyArticle();
+      setArticles(response.data);
+    } catch (error) {
+      console.log("error get my article: ", error);
     }
-  }, [isUpdate]);
+  }, []);
+
   return (
     <>
       <ModalAddArticle
         visible={isAdd}
         onClose={closeAdd}
-        onSuccess={() => {
-          setIsUpdate(Date.now());
-        }}
+        onSuccess={handelGetMyArticle}
       />
       <ModalComment visible={isComment} onClose={closeComment} />
       <Box>
@@ -64,3 +55,17 @@ const MyArticle = () => {
 };
 
 export default withAuth(MyArticle);
+
+export const getServerSideProps: GetServerSideProps<Props> = async ({
+  req,
+}) => {
+  try {
+    const response = await getMyArticle(req.cookies["jwt_auth"]);
+
+    return {
+      props: { myArticles: response.data },
+    };
+  } catch (error) {
+    return myErrorSSR(error as AxiosError<ErrorResponse>);
+  }
+};

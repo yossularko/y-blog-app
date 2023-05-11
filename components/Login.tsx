@@ -1,7 +1,7 @@
 import { LoginRes } from "@/types";
 import { ErrorResponse } from "@/types/error";
-import errorRes from "@/utils/errorRes";
 import { login } from "@/utils/fetchApi";
+import { myErrorBasic } from "@/utils/myError";
 import {
   Box,
   Button,
@@ -42,10 +42,11 @@ const Login = ({ onSuccess }: Props) => {
         setLoading(false);
         if (response.status === 201) {
           setInput(initialInput);
-          await onSuccess(response.data);
+          onSuccess(response.data);
         }
       } catch (error) {
-        errorRes(error as AxiosError<ErrorResponse>, toast, setLoading);
+        myErrorBasic(error as AxiosError<ErrorResponse>, toast);
+        setLoading(false);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

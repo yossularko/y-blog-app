@@ -45,7 +45,7 @@ const ListArticle = ({ data }: Props) => {
                 </Box>
                 <Box>
                   <Text fontSize="sm">
-                    {new Date(item.createdAt).toLocaleDateString()}
+                    {new Date(item.createdAt).toDateString()}
                   </Text>
                 </Box>
               </Flex>

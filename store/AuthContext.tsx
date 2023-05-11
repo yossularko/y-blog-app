@@ -1,7 +1,7 @@
 import { LoginRes, User } from "@/types";
 import { ErrorResponse } from "@/types/error";
-import errorRes from "@/utils/errorRes";
 import { refreshToken } from "@/utils/fetchApi";
+import { myErrorBasic } from "@/utils/myError";
 import { useToast } from "@chakra-ui/react";
 import { AxiosError } from "axios";
 import React, {
@@ -200,7 +200,7 @@ const AuthProvider = ({ children }: Props): JSX.Element => {
         });
       }
     } catch (error) {
-      errorRes(error as AxiosError<ErrorResponse>, toast);
+      myErrorBasic(error as AxiosError<ErrorResponse>, toast);
     }
   }, [toast, state.userData]);
 

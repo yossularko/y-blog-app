@@ -37,8 +37,13 @@ export const getArticle = async () => {
   return await fetchApi.get("/articles");
 };
 
-export const getMyArticle = async () => {
-  return await fetchApi.get("/articles/my-article", { withCredentials: true });
+export const getMyArticle = async (bearer?: string) => {
+  return await fetchApi.get(
+    "/articles/my-article",
+    bearer
+      ? { headers: { Authorization: `bearer ${bearer}` } }
+      : { withCredentials: true }
+  );
 };
 
 export const getArticleDetails = async (slug: string) => {

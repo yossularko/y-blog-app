@@ -3,18 +3,13 @@ import { Article, Pagination } from "@/types";
 import { getArticle } from "@/utils/fetchApi";
 import ListArticle from "@/components/ListArticle";
 import { GetServerSideProps, NextPage } from "next";
+import { myErrorSSR } from "@/utils/myError";
+import { AxiosError } from "axios";
+import { ErrorResponse } from "@/types/error";
 
 interface Props {
   articles: Pagination<{ data: Article[] }>;
 }
-
-const initialData: Pagination<{ data: Article[] }> = {
-  page: 0,
-  perpage: 0,
-  total: 0,
-  totalPage: 0,
-  data: [],
-};
 
 const Home: NextPage<Props> = ({ articles }) => {
   return (
@@ -35,9 +30,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async () => {
       props: { articles: response.data },
     };
   } catch (error) {
-    console.log("error get all article: ", error);
-    return {
-      props: { articles: initialData },
-    };
+    return myErrorSSR(error as AxiosError<ErrorResponse>);
   }
 };

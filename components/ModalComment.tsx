@@ -1,6 +1,7 @@
+import { AuthContext } from "@/store/AuthContext";
 import { ErrorResponse } from "@/types/error";
-import errorRes from "@/utils/errorRes";
 import { commentArticle } from "@/utils/fetchApi";
+import { myError } from "@/utils/myError";
 import {
   Button,
   HStack,
@@ -16,7 +17,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { AxiosError } from "axios";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useContext, useState } from "react";
 
 interface Props {
   visible: boolean;
@@ -34,6 +35,7 @@ const initialInputs = {
 };
 
 const ModalComment = ({ visible, onClose }: Props) => {
+  const { handleRefreshToken } = useContext(AuthContext);
   const [input, setInput] = useState(initialInputs);
   const [files, setFiles] = useState<FilesUpload[]>([]);
   const [loading, setLoading] = useState(false);
@@ -82,10 +84,11 @@ const ModalComment = ({ visible, onClose }: Props) => {
         setFiles([]);
         onClose();
       } catch (error) {
-        errorRes(error as AxiosError<ErrorResponse>, toast, setLoading);
+        myError(error as AxiosError<ErrorResponse>, toast, handleRefreshToken);
+        setLoading(false);
       }
     },
-    [input, files, toast, onClose]
+    [input, files, toast, onClose, handleRefreshToken]
   );
   return (
     <Modal isOpen={visible} onClose={onClose}>

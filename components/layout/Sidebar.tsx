@@ -1,15 +1,14 @@
 import { AuthContext } from "@/store/AuthContext";
 import { ErrorResponse } from "@/types/error";
 import { appUrl } from "@/utils/constant";
-import errorRes from "@/utils/errorRes";
 import { getProfile } from "@/utils/fetchApi";
+import { myError } from "@/utils/myError";
 import {
   Box,
   Flex,
   HStack,
   IconButton,
   Image,
-  Stack,
   Text,
   useDisclosure,
   useToast,
@@ -47,10 +46,7 @@ const Sidebar = () => {
       const response = await getProfile(user.id);
       setUpdateProfile(response.data);
     } catch (error) {
-      errorRes(error as AxiosError<ErrorResponse>, toast, undefined, {
-        isCustom401: true,
-        handle401: handleRefreshToken,
-      });
+      myError(error as AxiosError<ErrorResponse>, toast, handleRefreshToken);
     }
   }, [handleRefreshToken, setUpdateProfile, user.id, toast]);
 

@@ -1,8 +1,8 @@
 import { AuthContext } from "@/store/AuthContext";
 import { Category } from "@/types";
 import { ErrorResponse } from "@/types/error";
-import errorRes from "@/utils/errorRes";
 import { getCategory, postArticle } from "@/utils/fetchApi";
+import { myError } from "@/utils/myError";
 import {
   Button,
   Input,
@@ -23,7 +23,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: () => Promise<void>;
 }
 
 const initialInputs = {
@@ -61,10 +61,7 @@ const ModalAddArticle = ({ visible, onClose, onSuccess }: Props) => {
       const response = await getCategory();
       setCategory(response.data);
     } catch (error) {
-      errorRes(error as AxiosError<ErrorResponse>, toast, undefined, {
-        isCustom401: true,
-        handle401: handleRefreshToken,
-      });
+      myError(error as AxiosError<ErrorResponse>, toast, handleRefreshToken);
     }
   }, [handleRefreshToken, toast]);
 
@@ -94,10 +91,8 @@ const ModalAddArticle = ({ visible, onClose, onSuccess }: Props) => {
         setLoading(false);
         onClose();
       } catch (error) {
-        errorRes(error as AxiosError<ErrorResponse>, toast, setLoading, {
-          isCustom401: true,
-          handle401: handleRefreshToken,
-        });
+        myError(error as AxiosError<ErrorResponse>, toast, handleRefreshToken);
+        setLoading(false);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

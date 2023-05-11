@@ -1,8 +1,8 @@
 import { AuthContext } from "@/store/AuthContext";
 import { ErrorResponse } from "@/types/error";
 import { appUrl } from "@/utils/constant";
-import errorRes from "@/utils/errorRes";
 import { updateProfile } from "@/utils/fetchApi";
+import { myError } from "@/utils/myError";
 import {
   Box,
   Button,
@@ -39,6 +39,7 @@ const baseBgImage =
 const ModalProfile = ({ visible, onClose, onSuccess }: Props) => {
   const {
     userData: { user },
+    handleRefreshToken,
   } = useContext(AuthContext);
   const { name, userEmail, bio, avaImage, bgImage } = user.profile;
   const [files, setFiles] = useState<FileUpload>({
@@ -94,9 +95,10 @@ const ModalProfile = ({ visible, onClose, onSuccess }: Props) => {
       setLoading(false);
       console.log("res: ", response.data);
     } catch (error) {
-      errorRes(error as AxiosError<ErrorResponse>, toast, setLoading);
+      myError(error as AxiosError<ErrorResponse>, toast, handleRefreshToken);
+      setLoading(false);
     }
-  }, [files, toast, user.id, onSuccess, onClose]);
+  }, [files, toast, user.id, onSuccess, onClose, handleRefreshToken]);
 
   return (
     <Modal isOpen={visible} onClose={onClose} size="2xl">
