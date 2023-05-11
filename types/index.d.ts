@@ -48,6 +48,39 @@ export interface Article {
   };
 }
 
+export interface Comment {
+  id: string;
+  body: string;
+  images: string[];
+  createdAt: string;
+  User: {
+    id: string;
+    profile: {
+      name: string;
+      avaImage: string;
+    };
+  };
+}
+
+export interface ArticleDetails extends Article {
+  Author: {
+    id: string;
+    profile: {
+      id: string;
+      name: string;
+      bio: string;
+      avaImage: string;
+      bgImage: string;
+      userEmail: string;
+    };
+  };
+  comments: Comment[];
+}
+
+export interface Slug {
+  slug: string;
+}
+
 export interface Category {
   id: string;
   name: string;

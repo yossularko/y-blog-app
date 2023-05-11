@@ -46,6 +46,10 @@ export const getMyArticle = async (bearer?: string) => {
   );
 };
 
+export const getArticleSlugs = async () => {
+  return await fetchApi.get("/articles/slugs");
+};
+
 export const getArticleDetails = async (slug: string) => {
   return await fetchApi.get(`/articles/${slug}`);
 };

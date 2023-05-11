@@ -2,6 +2,7 @@ import { Article } from "@/types";
 import { appUrl } from "@/utils/constant";
 import { Box, Flex, Text } from "@chakra-ui/react";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 interface Props {
@@ -13,7 +14,15 @@ const ListArticle = ({ data }: Props) => {
     <Box mt={4}>
       {data.map((item) => {
         return (
-          <Flex key={item.slug} mb={2} bg="gray.700" p={4} borderRadius="2xl">
+          <Flex
+            key={item.slug}
+            as={Link}
+            href={`/article/${item.slug}`}
+            mb={2}
+            bg="gray.700"
+            p={4}
+            borderRadius="2xl"
+          >
             <Box
               w="200px"
               h="160px"
