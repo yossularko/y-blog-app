@@ -57,6 +57,9 @@ export const postArticle = async (data: any) => {
 
 export const commentArticle = async (data: any) => {
   return fetchApi.post("/comments", data, {
+    headers: {
+      "Content-Type": "multipart/form-data", // tidak diperlukan untuk axios versi 1.4 keatas
+    },
     withCredentials: true,
   });
 };
