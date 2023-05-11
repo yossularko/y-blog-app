@@ -14,14 +14,17 @@ import {
   ModalHeader,
   ModalOverlay,
   Text,
+  Textarea,
   useToast,
 } from "@chakra-ui/react";
 import { AxiosError } from "axios";
 import React, { useCallback, useContext, useState } from "react";
 
 interface Props {
+  articleSlug: string;
   visible: boolean;
   onClose: () => void;
+  onSuccess: () => Promise<void>;
 }
 
 interface FilesUpload {
@@ -31,10 +34,9 @@ interface FilesUpload {
 
 const initialInputs = {
   body: "",
-  articleSlug: "",
 };
 
-const ModalComment = ({ visible, onClose }: Props) => {
+const ModalComment = ({ articleSlug, visible, onClose, onSuccess }: Props) => {
   const { handleRefreshToken } = useContext(AuthContext);
   const [input, setInput] = useState(initialInputs);
   const [files, setFiles] = useState<FilesUpload[]>([]);
@@ -42,9 +44,12 @@ const ModalComment = ({ visible, onClose }: Props) => {
 
   const toast = useToast();
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  }, []);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setInput((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    },
+    []
+  );
 
   const handleChangeFile = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,17 +73,13 @@ const ModalComment = ({ visible, onClose }: Props) => {
       try {
         const dataPost = new FormData();
         dataPost.append("body", input.body);
-        dataPost.append("articleSlug", input.articleSlug);
+        dataPost.append("articleSlug", articleSlug);
         if (files.length > 0) {
           files.map((val) => dataPost.append("files", val.file));
         }
 
         await commentArticle(dataPost);
-        toast({
-          status: "success",
-          title: "Comment Success",
-          description: `Comment success ${input.articleSlug}`,
-        });
+        await onSuccess();
         setLoading(false);
         setInput(initialInputs);
         setFiles([]);
@@ -88,7 +89,7 @@ const ModalComment = ({ visible, onClose }: Props) => {
         setLoading(false);
       }
     },
-    [input, files, toast, onClose, handleRefreshToken]
+    [articleSlug, input, files, toast, onClose, handleRefreshToken, onSuccess]
   );
   return (
     <Modal isOpen={visible} onClose={onClose}>
@@ -98,17 +99,10 @@ const ModalComment = ({ visible, onClose }: Props) => {
         <ModalCloseButton />
         <ModalBody>
           <form onSubmit={handleSubmit}>
-            <Text mt={2}>Slug</Text>
-            <Input
-              name="articleSlug"
-              type="text"
-              placeholder="input article slug"
-              onChange={handleChange}
-            />
+            <Text mt={2}>Slug: {articleSlug}</Text>
             <Text mt={2}>Comment</Text>
-            <Input
+            <Textarea
               name="body"
-              type="text"
               placeholder="input comment"
               onChange={handleChange}
             />
