@@ -1,9 +1,9 @@
 import ModalComment from "@/components/ModalComment";
 import { AuthContext } from "@/store/AuthContext";
-import { ArticleDetails, Slug } from "@/types";
+import { ArticleDetails } from "@/types";
 import { ErrorResponse } from "@/types/error";
 import { appUrl } from "@/utils/constant";
-import { getArticleDetails, getArticleSlugs } from "@/utils/fetchApi";
+import { getArticleDetails } from "@/utils/fetchApi";
 import { myError, myErrorSSR } from "@/utils/myError";
 import { myToast } from "@/utils/myToast";
 import {
@@ -17,8 +17,8 @@ import {
   useToast,
   Image as ChakraImage,
 } from "@chakra-ui/react";
-import { AxiosError, AxiosResponse } from "axios";
-import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import { AxiosError } from "axios";
+import { GetServerSideProps, NextPage } from "next";
 import Image from "next/image";
 import { ParsedUrlQuery } from "querystring";
 import React, { useCallback, useContext, useState } from "react";
@@ -179,33 +179,7 @@ const DetailsArticle: NextPage<Props> = ({ articleDetails }) => {
 
 export default DetailsArticle;
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  try {
-    const response = (await getArticleSlugs()) as AxiosResponse<Slug[]>;
-
-    const slugs: string[] = response.data.map((slug) => slug.slug);
-
-    const paths = slugs.map((item) => ({
-      params: {
-        slug: item,
-      },
-    }));
-
-    return {
-      paths,
-      fallback: "blocking",
-    };
-  } catch (err) {
-    console.log("error get paths: ", err);
-
-    return {
-      paths: [{ params: { slug: "no-slug" } }],
-      fallback: false,
-    };
-  }
-};
-
-export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
+export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) => {
   const { slug } = params as IParams;
   try {
     const response = await getArticleDetails(slug);
